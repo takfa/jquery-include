@@ -1,6 +1,6 @@
 /*
 	jquery.include-2
-	@version  2.0
+	@version  2.1
  	@author   John Hunter on 2008-09-20.
 	Licence CC-BSD <http://creativecommons.org/licenses/BSD/>
 	
@@ -71,6 +71,7 @@
 			var el = $(this);
 			el.replaceWith(el.contents());
 		});
+		return this;
 	};
 	
 	$(document).ready(function() {
