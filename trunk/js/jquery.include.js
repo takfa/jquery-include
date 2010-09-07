@@ -15,9 +15,6 @@
 	(e.g. src="../foo").
 	
 */
-
-
-
 (function($) {
 	var maxRegression = 20,
 		tagName = 'span',
@@ -59,9 +56,7 @@
 							inc.html(data).removeAttr('src').addClass('include-loaded');//.hide();
 							setTimeout(function () { parse(inc.get(0)); }, ieParseDelay);
 						},
-						error: function () {
-							handleError(inc);
-						}	
+						error: function () { handleError(inc); }
 					});
 
 				} catch(e) { handleError(inc); }// catch and ignore NS_ERROR_DOM_BAD_URI exceptions
@@ -83,6 +78,7 @@
 	}
 	
 	function handleError (inc) {
+		if (window.console && console.warn) console.warn('Unable to load ', inc.attr('src'));
 		setTimeout(function () {
 				inc.removeAttr('src');
 				parse(inc.get(0));
