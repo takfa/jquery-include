@@ -16,7 +16,10 @@
 (function($) {
 	var maxRegression = 20,
 		tagName = 'span',
-		keepIncludeTags = false;
+		ieParseDelay = 30,
+		
+		keepIncludeTags = false,
+		rewritePaths = true;
 	
 	
 	function parse (domNode) {
@@ -33,27 +36,33 @@
 		
 		// load and parse include
 		$(tagName +'[src]', domNode).each(function () {
-			var inc = $(this),
-				src = inc.attr('src'),
-				path;
-				
+			var inc = $(this);
+			var src = inc.attr('src');
 			if (src) {
-				path = src.split('/').slice(0, -1).join('/') + '/';
-				$.get(src, function(data) {
-					
-					// modify any relative paths 
-					data = data.replace(/(\b(?:src|href)=")([^"]+")/g, function () {
-						var s = arguments;
-						if (/^http(s{0,1}):\/{2}|^\//.test(s[2])) {
-							return s[1] + s[2];
+				var path = src.split('/').slice(0, -1).join('/') + '/';
+				
+				$.ajax({
+					type: "GET",
+					url: src,
+					success: function(data) {
+						if (rewritePaths) {
+							// modify any relative paths 
+							data = data.replace(/(\b(?:src|href)=")([^"]+")/g, function () {
+								var s = arguments;
+								if (/^http(s{0,1}):\/{2}|^\//.test(s[2])) {
+									return s[1] + s[2];
+								}
+								return s[1] + path + s[2];
+							});
 						}
-						return s[1] + path + s[2];
-					});
-					
-					inc.html(data).addClass('include-loaded').removeAttr('src').hide();
-					
-					setTimeout(function () { parse(inc.get(0)); }, 30);// delay for IE
-				});	
+						inc.html(data).addClass('include-loaded').removeAttr('src').hide();
+						setTimeout(function () { parse(inc.get(0)); }, ieParseDelay);
+					},
+					error: function () {
+						inc.removeAttr('src');
+						setTimeout(function () { parse(inc.get(0)); }, ieParseDelay);
+					}	
+				});
 			}
 		});
 		return this;
