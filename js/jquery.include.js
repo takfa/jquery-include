@@ -1,6 +1,6 @@
 /*
 	jquery.include-2
-	@version  2.1
+	@version  2.2
  	@author   John Hunter on 2008-09-20.
 	Licence CC-BSD <http://creativecommons.org/licenses/BSD/>
 	
@@ -9,6 +9,11 @@
 	For post-include scripts $(document).includeReady works the same as $(document).ready
 	
 	Based on ideas from hinclude by Mark Nottingham <mnot@pobox.com>
+	
+	Note: Firefox 3+ throws a NS_ERROR_DOM_BAD_URI exception when an xhr file: request is made above the current file context
+	https://developer.mozilla.org/En/HTTP_access_control
+	(e.g. src="../foo").
+	
 */
 
 
@@ -36,36 +41,52 @@
 		
 		// load and parse include
 		$(tagName +'[src]', domNode).each(function () {
-			var inc = $(this);
-			var src = inc.attr('src');
+			var inc = $(this),
+				src = inc.attr('src'),
+				path;
+			
 			if (src) {
-				var path = src.split('/').slice(0, -1).join('/') + '/';
-				
-				$.ajax({
-					type: "GET",
-					url: src,
-					success: function(data) {
-						if (rewritePaths) {
-							// modify any relative paths 
-							data = data.replace(/(\b(?:src|href)=")([^"]+")/g, function () {
-								var s = arguments;
-								if (/^http(s{0,1}):\/{2}|^\//.test(s[2])) {
-									return s[1] + s[2];
-								}
-								return s[1] + path + s[2];
-							});
-						}
-						inc.html(data).addClass('include-loaded').removeAttr('src').hide();
-						setTimeout(function () { parse(inc.get(0)); }, ieParseDelay);
-					},
-					error: function () {
-						inc.removeAttr('src');
-						setTimeout(function () { parse(inc.get(0)); }, ieParseDelay);
-					}	
-				});
+				path = src.split('/').slice(0, -1).join('/') + '/';
+				try {
+					
+					$.ajax({
+						type: "GET",
+						url: src,
+						success: function(data) {
+							if (rewritePaths) {
+								data = pathRewrite(data, path);
+							}
+							inc.html(data).removeAttr('src').addClass('include-loaded');//.hide();
+							setTimeout(function () { parse(inc.get(0)); }, ieParseDelay);
+						},
+						error: function () {
+							handleError(inc);
+						}	
+					});
+
+				} catch(e) { handleError(inc); }// catch and ignore NS_ERROR_DOM_BAD_URI exceptions
 			}
 		});
 		return this;
+	};
+	
+	
+	function pathRewrite (html, path) {
+		// modify any relative paths 
+		return html.replace(/(\b(?:src|href)=")([^"]+")/g, function () {
+			var s = arguments;
+			if (/^http(s{0,1}):\/{2}|^\//.test(s[2])) {
+				return s[1] + s[2];
+			}
+			return s[1] + path + s[2];
+		});
+	}
+	
+	function handleError (inc) {
+		setTimeout(function () {
+				inc.removeAttr('src');
+				parse(inc.get(0));
+			}, ieParseDelay);
 	};
 	
 	
