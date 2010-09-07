@@ -14,12 +14,12 @@
 
 
 (function($) {
-	var maxRegression = 20;
-	var tagName = 'span';
-	var keepIncludeTags = false;
+	var maxRegression = 20,
+		tagName = 'span',
+		keepIncludeTags = false;
 	
 	
-	var parse = function (domNode) {
+	function parse (domNode) {
 		if (maxRegression-- < 1) return this;
 		
 		// remove include tags and fire ready event
@@ -33,10 +33,12 @@
 		
 		// load and parse include
 		$(tagName +'[src]', domNode).each(function () {
-			var inc = $(this);
-			var src = inc.attr('src');
+			var inc = $(this),
+				src = inc.attr('src'),
+				path;
+				
 			if (src) {
-				var path = src.split('/').slice(0, -1).join('/') + '/';
+				path = src.split('/').slice(0, -1).join('/') + '/';
 				$.get(src, function(data) {
 					
 					// modify any relative paths 
@@ -67,11 +69,10 @@
 	};
 	
 	$.fn.unwrap = function () {
-		$(this).each(function () {
+		return this.each(function () {
 			var el = $(this);
 			el.replaceWith(el.contents());
 		});
-		return this;
 	};
 	
 	$(document).ready(function() {
