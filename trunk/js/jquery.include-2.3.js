@@ -56,7 +56,7 @@
 					$.ajax({
 						type: "GET",
 						url: src,
-						// CHANGED: jQuery 1.5 triggers an error callback despite having received the responseText, so using complete event.
+						// CHANGED: to complete event, jQuery 1.5 triggers error callback despite having a responseText.
 						complete: function (xhr, status) {
 							if (status === 'error' || !xhr.responseText) {
 								handleError(inc);
