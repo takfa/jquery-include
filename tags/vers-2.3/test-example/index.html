@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<title>jQuery.include-2.3 example</title>
+	<style type="text/css">
+	
+	.section { margin: 1em 0; padding: 0.5em; border: 2px dotted #ccc; }
+		
+	</style>
+	
+	<script src="http://code.jquery.com/jquery-1.5.js" type="text/javascript"></script>
+	<script src="../js/jquery.include-min.js" type="text/javascript"></script>
+	
+	<script type="text/javascript">
+	
+	// post-process the includes:
+	$(document).includeReady(function () {
+		$('body').append('<p><em>Successfully loaded <strong>' + $('div.section').length + '</strong> sections.</em></p>');
+	});
+	
+	</script>
+</head>
+
+<body>
+	
+	<h1>Client-side include</h1>
+	
+	<h2><a href="http://code.google.com/p/jquery-include/">A jQuery plugin</a></h2>
+	
+	<p>This page should contain some included lists - the included content is indicated with grey dotted borders.</p>
+	<ul>
+		<li>The includes are handled client-side.</li>
+		<li>Nested includes are supported.</li>
+		<li>A jQuery includeReady event is provided for post-processing scripts.</li>
+	</ul>
+	
+	<p>Note: When used in a file system Firefox 3.x will not load includes above the current page file context. E.G.
+	<code>&lt;span src=&quot;../includes/nav.html&quot;&gt;</code> will not work when you load from a <code>file://</code> url.</p>
+	
+	<p>You can modify this behaviour by changing the browser default security settings:</p>
+	
+	<blockquote>
+		Enter <code>about:config</code> in the address bar, then change the value from <code>true</code> to <code>false</code> for <code>security.fileuri.strict_origin_policy<code> which will grant access to all of the files using scheme file:
+		<br><cite><a href="http://stackoverflow.com/questions/3181911/why-does-jquery-get-home-user-0-0a-html-fail-when-using-file-rather-than-htt/3188707#3188707">C.W. Holeman II</a></cite>
+	</blockquote>
+	
+	
+	
+	
+	<span src="includes/test1.html">
+		[test1 include has not loaded]
+	</span>
+	<p>Images from <a href="http://www.flickr.com/photos/johnhunter/">catenjohn</a></p>
+
+	<span src="includes/footer.html">
+		[footer include has not loaded]
+	</span>
+
+</body>
+</html>
