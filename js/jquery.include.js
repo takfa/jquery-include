@@ -1,7 +1,7 @@
 /*
-	jquery.include-2
-	@version  2.2
- 	@author   John Hunter on 2008-09-20.
+	jquery.include <http://code.google.com/p/jquery-include/>
+	@version  2.3
+ 	@author   John Hunter on 2011-02-03
 	Licence CC-BSD <http://creativecommons.org/licenses/BSD/>
 	
 	Uses a standard tag with an src value <span src=""></span> - these are stripped from the dom after loading.
@@ -13,6 +13,13 @@
 	Note: Firefox 3+ throws a NS_ERROR_DOM_BAD_URI exception when an xhr file: request is made above the current file context
 	https://developer.mozilla.org/En/HTTP_access_control
 	(e.g. src="../foo").
+	You can override this behavour by setting the browser config:
+	about:config ->
+		security.fileuri.strict_origin_policy = false
+	
+	
+	version 2.3
+	- move from success/error callbacks to use complete due to failure with jQuery 1.5
 	
 */
 (function($) {
@@ -49,14 +56,20 @@
 					$.ajax({
 						type: "GET",
 						url: src,
-						success: function(data) {
-							if (rewritePaths) {
-								data = pathRewrite(data, path);
+						// CHANGED: to complete event, jQuery 1.5 triggers error callback despite having a responseText.
+						complete: function (xhr, status) {
+							if (status === 'error' || !xhr.responseText) {
+								handleError(inc);
 							}
-							inc.html(data).removeAttr('src').addClass('include-loaded');//.hide();
-							setTimeout(function () { parse(inc.get(0)); }, ieParseDelay);
-						},
-						error: function () { handleError(inc); }
+							else {
+								var data = xhr.responseText;
+								if (rewritePaths) {
+									data = pathRewrite(data, path);
+								}
+								inc.html(data).removeAttr('src').addClass('include-loaded');//.hide();
+								setTimeout(function () { parse(inc.get(0)); }, ieParseDelay);
+							}
+						}
 					});
 
 				} catch(e) { handleError(inc); }// catch and ignore NS_ERROR_DOM_BAD_URI exceptions
