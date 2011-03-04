@@ -1,53 +1,48 @@
 /*
 	jquery.include <http://code.google.com/p/jquery-include/>
-	@version  2.3
- 	@author   John Hunter on 2011-02-03
+	@version  2.4
+ 	@author   John Hunter on 2011-03-03
 	Licence CC-BSD <http://creativecommons.org/licenses/BSD/>
 	
-	Uses a standard tag with an src value <span src=""></span> - these are stripped from the dom after loading.
+	Uses a standard tag with an src value <span data-src=""></span> - these are stripped from the dom after loading.
 	Can handle nested includes - linking paths in the include file are modifed to match the host page context.
 	For post-include scripts $(document).includeReady works the same as $(document).ready
 	
 	Based on ideas from hinclude by Mark Nottingham <mnot@pobox.com>
 	
-	Note: Firefox 3+ throws a NS_ERROR_DOM_BAD_URI exception when an xhr file: request is made above the current file context
-	https://developer.mozilla.org/En/HTTP_access_control
-	(e.g. src="../foo").
-	You can override this behavour by setting the browser config:
-	about:config ->
-		security.fileuri.strict_origin_policy = false
-	
-	
 	version 2.3
-	- move from success/error callbacks to use complete due to failure with jQuery 1.5
+	- move from success/error callbacks to use complete due to failure with jQuery 1.5 (fixed in 1.5.1)
+	version 2.4
+	- allow include tags to use 'src' or 'data-src' attr
 	
 */
 (function($) {
 	var maxRegression = 20,
 		tagName = 'span',
+		incSelect = tagName +'[src],'+ tagName +'[data-src]',
 		ieParseDelay = 30,
 		
 		keepIncludeTags = false,
 		rewritePaths = true;
-	
+		
 	
 	function parse (domNode) {
 		if (maxRegression-- < 1) return this;
 		
 		// remove include tags and fire ready event
-		if ($(tagName +'[src]').length === 0) {
-			if (!keepIncludeTags) $(tagName +'.include-loaded').unwrap();
-			else $(tagName +'.include-loaded').show();
+		if ($(incSelect).length === 0) {
 			
+			$(tagName +'.include-loaded')[keepIncludeTags ? 'show' : 'unwrap']();
 			$(document).trigger('includeReady');
 			return this;
 		}
 		
 		// load and parse include
-		$(tagName +'[src]', domNode).each(function () {
+		$(incSelect, domNode).each(function () {
 			var inc = $(this),
-				src = inc.attr('src'),
+				src = inc.attr('src') || inc.attr('data-src'),
 				path;
+			
 			
 			if (src) {
 				path = src.split('/').slice(0, -1).join('/') + '/';
@@ -56,7 +51,6 @@
 					$.ajax({
 						type: "GET",
 						url: src,
-						// CHANGED: to complete event, jQuery 1.5 triggers error callback despite having a responseText.
 						complete: function (xhr, status) {
 							if (status === 'error' || !xhr.responseText) {
 								handleError(inc);
@@ -66,18 +60,20 @@
 								if (rewritePaths) {
 									data = pathRewrite(data, path);
 								}
-								inc.html(data).removeAttr('src').addClass('include-loaded');//.hide();
+								inc.html(data).
+									addClass('include-loaded').
+									removeAttrs(['src','data-src']);
+								
 								setTimeout(function () { parse(inc.get(0)); }, ieParseDelay);
 							}
 						}
 					});
 
-				} catch(e) { handleError(inc); }// catch and ignore NS_ERROR_DOM_BAD_URI exceptions
+				} catch(e) { handleError(inc, src); }
 			}
 		});
 		return this;
-	};
-	
+	}
 	
 	function pathRewrite (html, path) {
 		// modify any relative paths 
@@ -90,10 +86,12 @@
 		});
 	}
 	
-	function handleError (inc) {
-		if (window.console && console.warn) console.warn('Unable to load ', inc.attr('src'));
+	function handleError (inc, src) {
+		if (window.console && console.warn) {
+			console.warn('Unable to load ', src);
+		}
 		setTimeout(function () {
-				inc.removeAttr('src');
+				inc.removeAttrs(['src','data-src']);
 				parse(inc.get(0));
 			}, ieParseDelay);
 	};
@@ -112,6 +110,12 @@
 			var el = $(this);
 			el.replaceWith(el.contents());
 		});
+	};
+	
+	$.fn.removeAttrs = function (list) {
+		for (var i = list.length; i--; ) { 
+			this.removeAttr(list[i]);
+		}
 	};
 	
 	$(document).ready(function() {
