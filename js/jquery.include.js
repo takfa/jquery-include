@@ -1,7 +1,7 @@
 /*
 	jquery.include <http://code.google.com/p/jquery-include/>
-	@version  2.4
- 	@author   John Hunter on 2011-03-03
+	@version  2.5
+ 	@author   John Hunter on 2011-03-05
 	Licence CC-BSD <http://creativecommons.org/licenses/BSD/>
 	
 	Uses a standard tag with an src value <span data-src=""></span> - these are stripped from the dom after loading.
@@ -14,6 +14,8 @@
 	- move from success/error callbacks to use complete due to failure with jQuery 1.5 (fixed in 1.5.1)
 	version 2.4
 	- allow include tags to use 'src' or 'data-src' attr
+	version 2.5
+	- use native jQuery.unwrap if available
 	
 */
 (function($) {
@@ -105,12 +107,14 @@
 		return this;
 	};
 	
-	$.fn.unwrap = function () {
-		return this.each(function () {
-			var el = $(this);
-			el.replaceWith(el.contents());
-		});
-	};
+	if (!$.isFunction($.fn.unwrap)) {
+		$.fn.unwrap = function () {
+			return this.each(function () {
+				var el = $(this);
+				el.replaceWith(el.contents());
+			});
+		};
+	}
 	
 	$.fn.removeAttrs = function (list) {
 		for (var i = list.length; i--; ) { 
