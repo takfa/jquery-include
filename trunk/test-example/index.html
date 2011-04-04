@@ -9,8 +9,13 @@
 		
 	</style>
 	
+	<!--
+		Try to load the cdn version first...
+	-->
 	<script src="http://code.jquery.com/jquery-1.5.js"></script>
-	<script src="../js/jquery.include.js"></script>
+	<script>window.jQuery || document.write('<script src="jquery-1.5.1.min.js">\x3C/script>')</script>
+	
+	<script src="../js/jquery.include-min.js"></script>
 	
 	<script>
 	
@@ -42,8 +47,8 @@
 	</span>
 	<p>Images from <a href="http://www.flickr.com/photos/johnhunter/">catenjohn</a></p>
 
-	<span data-src="includes/footer.html">
-		[footer include has not loaded]
+	<span data-src="top-level-nested.html">
+		[top-level-nested include has not loaded]
 	</span>
 
 </body>
