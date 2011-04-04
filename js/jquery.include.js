@@ -1,7 +1,7 @@
 /*
 	jquery.include <http://code.google.com/p/jquery-include/>
 	@version  2.5
- 	@author   John Hunter on 2011-03-05
+ 	@author   John Hunter on 2011-04-02
 	Licence CC-BSD <http://creativecommons.org/licenses/BSD/>
 	
 	Uses a standard tag with an src value <span data-src=""></span> - these are stripped from the dom after loading.
@@ -15,7 +15,8 @@
 	version 2.4
 	- allow include tags to use 'src' or 'data-src' attr
 	version 2.5
-	- use native jQuery.unwrap if available
+	- fix error with path rewriting in top level includes
+	- rename unwrap to replaceWithChildren as its different from native $.unwrap
 	
 */
 (function($) {
@@ -23,6 +24,7 @@
 		tagName = 'span',
 		incSelect = tagName +'[src],'+ tagName +'[data-src]',
 		ieParseDelay = 30,
+		includeReadyFired = false,
 		
 		keepIncludeTags = false,
 		rewritePaths = true;
@@ -33,9 +35,11 @@
 		
 		// remove include tags and fire ready event
 		if ($(incSelect).length === 0) {
-			
-			$(tagName +'.include-loaded')[keepIncludeTags ? 'show' : 'unwrap']();
-			$(document).trigger('includeReady');
+			$(tagName +'.include-loaded')[keepIncludeTags ? 'show' : 'replaceWithChildren']();
+			if (!includeReadyFired) {
+				// NOTE: this may fire a little early - difficult to tell when all includes have completed.
+				$(document).trigger('includeReady');
+			}
 			return this;
 		}
 		
@@ -47,7 +51,9 @@
 			
 			
 			if (src) {
-				path = src.split('/').slice(0, -1).join('/') + '/';
+				path = src.split('/').slice(0, -1).join('/');
+				if (path) path += '/';
+				
 				try {
 					
 					$.ajax({
@@ -55,7 +61,7 @@
 						url: src,
 						complete: function (xhr, status) {
 							if (status === 'error' || !xhr.responseText) {
-								handleError(inc);
+								handleError(inc, src);
 							}
 							else {
 								var data = xhr.responseText;
@@ -84,6 +90,7 @@
 			if (/^http(s{0,1}):\/{2}|^\//.test(s[2])) {
 				return s[1] + s[2];
 			}
+			//console.info('rewrite: `%s` + `%s` + `%s`', s[1], path, s[2])
 			return s[1] + path + s[2];
 		});
 	}
@@ -102,19 +109,18 @@
 	// create the custom event
 	$.fn.includeReady = function (observerFn) {
 		$(document).bind('includeReady', function(event) {
+			includeReadyFired = true;
 			observerFn(event);
 		});
 		return this;
 	};
 	
-	if (!$.isFunction($.fn.unwrap)) {
-		$.fn.unwrap = function () {
-			return this.each(function () {
-				var el = $(this);
-				el.replaceWith(el.contents());
-			});
-		};
-	}
+	$.fn.replaceWithChildren = function () {
+		return this.each(function () {
+			var el = $(this);
+			el.replaceWith(this.childNodes);
+		});
+	};
 	
 	$.fn.removeAttrs = function (list) {
 		for (var i = list.length; i--; ) { 
@@ -125,5 +131,5 @@
 	$(document).ready(function() {
 		parse(document);
 	});
-		
-})(jQuery);
+	
+}(jQuery));
