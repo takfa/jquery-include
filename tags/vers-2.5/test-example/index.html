@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>jQuery.include vers2.5 example</title>
+	<style type="text/css">
+	
+	.section { margin: 1em 0; padding: 0.5em; border: 2px dotted #ccc; }
+		
+	</style>
+	
+	<!--
+		Try to load the cdn version first...
+	-->
+	<script src="http://code.jquery.com/jquery-1.5.js"></script>
+	<script>window.jQuery || document.write('<script src="jquery-1.5.1.min.js">\x3C/script>')</script>
+	
+	<script src="../js/jquery.include-min.js"></script>
+	
+	<script>
+	
+	// post-process the includes:
+	$(document).includeReady(function () {
+		$('body').append('<p><em>Successfully loaded <strong>' + $('div.section').length + '</strong> sections.</em></p>');
+	});
+	
+	</script>
+</head>
+
+<body>
+	
+	<h1>Client-side include</h1>
+	
+	<h2><a href="http://code.google.com/p/jquery-include/">A jQuery plugin</a></h2>
+	
+	<p>This page should contain some included lists - the included content is indicated with grey dotted borders.</p>
+	<ul>
+		<li>The includes are handled client-side.</li>
+		<li>Nested includes are supported.</li>
+		<li>A jQuery includeReady event is provided for post-processing scripts.</li>
+	</ul>
+	
+	
+	
+	<span data-src="includes/test1.html">
+		[test1 include has not loaded]
+	</span>
+	<p>Images from <a href="http://www.flickr.com/photos/johnhunter/">catenjohn</a></p>
+
+	<span data-src="top-level-nested.html">
+		[top-level-nested include has not loaded]
+	</span>
+
+</body>
+</html>
